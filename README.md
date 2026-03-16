@@ -22,10 +22,10 @@ Outil de mesure de la **bande passante effective** d'un réseau local.
 ## Architecture
 
 ```
-Terminal 1 (contrôleur)          Terminal annexe 2       Terminal annexe 3
-────────────────────────         ──────────────────      ──────────────────
-python speedtest.py auto    ←→   python speedtest.py     python speedtest.py
-  --config config.ini             server                   server
+Terminal 1 (contrôleur)                Terminal annexe 2          Terminal annexe 3
+──────────────────────────             ──────────────────         ──────────────────
+./speedtest-linux-x86_64 auto    ←→   ./speedtest-linux-x86_64   ./speedtest-linux-x86_64
+  --config config.ini                   server                      server
 ```
 
 - **Terminal 1** exécute le mode `auto` (ou `client`) : il initie tous les tests.
@@ -34,41 +34,62 @@ python speedtest.py auto    ←→   python speedtest.py     python speedtest.py
 
 ---
 
-## Installation
+## Installation — sans Python (exécutable autonome)
 
-Aucune dépendance externe — uniquement la bibliothèque standard Python 3.7+.
+> **Aucune installation de Python n'est nécessaire sur les machines cibles.**  
+> Téléchargez simplement le binaire correspondant à votre système et rendez-le exécutable.
+
+### Téléchargement
+
+| Système | Fichier |
+|---|---|
+| **Linux 64-bit** (x86_64) | `dist/speedtest-linux-x86_64` |
 
 ```bash
+# Cloner le dépôt (ou télécharger uniquement le binaire)
 git clone https://github.com/sebastienipharma/speed-intranet.git
 cd speed-intranet
+
+# Rendre l'exécutable... exécutable
+chmod +x dist/speedtest-linux-x86_64
+
+# Vérification
+./dist/speedtest-linux-x86_64 --help
 ```
+
+> **Note :** Le binaire `dist/speedtest-linux-x86_64` a été compilé pour Linux x86_64
+> (glibc ≥ 2.17, compatible Ubuntu 16.04+, Debian 9+, CentOS 7+).  
+> Pour d'autres plateformes (macOS, Windows, ARM), voir la section [Compiler soi-même](#compiler-soi-même).
 
 ---
 
 ## Utilisation
 
+Remplacez `python speedtest.py` par `./dist/speedtest-linux-x86_64` dans tous les exemples
+(ou copiez le binaire dans `/usr/local/bin/speedtest` pour l'utiliser sans chemin).
+
 ### 1. Mode serveur (sur chaque terminal annexe)
 
 ```bash
-python speedtest.py server
+./dist/speedtest-linux-x86_64 server
 # Port par défaut : 5201
-python speedtest.py server --port 5201
+./dist/speedtest-linux-x86_64 server --port 5201
 ```
 
 ### 2. Mode client (sur Terminal 1, test vers un seul terminal)
 
 ```bash
 # Test complet (upload + download, tous les formats de fichiers)
-python speedtest.py client --server 192.168.1.2
+./dist/speedtest-linux-x86_64 client --server 192.168.1.2
 
 # Uniquement les petits fichiers, dans les deux sens
-python speedtest.py client --server 192.168.1.2 --tests small
+./dist/speedtest-linux-x86_64 client --server 192.168.1.2 --tests small
 
 # Uniquement l'upload (Terminal 1 → terminal annexe)
-python speedtest.py client --server 192.168.1.2 --direction upload
+./dist/speedtest-linux-x86_64 client --server 192.168.1.2 --direction upload
 
 # Petits et moyens fichiers, réception seulement
-python speedtest.py client --server 192.168.1.2 --tests small,medium --direction download
+./dist/speedtest-linux-x86_64 client --server 192.168.1.2 --tests small,medium --direction download
 ```
 
 ### 3. Mode automatique (sur Terminal 1, test tous les terminaux)
@@ -76,9 +97,9 @@ python speedtest.py client --server 192.168.1.2 --tests small,medium --direction
 Éditez d'abord `config.ini` pour y mettre les adresses IP de vos terminaux, puis :
 
 ```bash
-python speedtest.py auto
-# ou
-python speedtest.py auto --config config.ini
+./dist/speedtest-linux-x86_64 auto
+# ou avec un fichier de config personnalisé
+./dist/speedtest-linux-x86_64 auto --config config.ini
 ```
 
 ---
@@ -174,6 +195,44 @@ Le delta donne le temps de transfert effectif, duquel on déduit le débit réel
   Débit moyen  upload   : 89.4 Mbps
   Débit moyen  download : 91.1 Mbps
 ════════════════════════════════════════════════════════════════════════
+```
+
+---
+
+## Compiler soi-même
+
+Si vous avez besoin d'un binaire pour une autre plateforme (macOS, Windows, ARM…),
+compilez le depuis la source sur la machine cible :
+
+```bash
+# 1. Prérequis : Python 3.7+ et pip (uniquement sur la machine de build)
+# 2. Cloner le dépôt
+git clone https://github.com/sebastienipharma/speed-intranet.git
+cd speed-intranet
+
+# 3. Lancer le script de build (installe PyInstaller automatiquement)
+chmod +x build.sh
+./build.sh
+# → produit dist/speedtest-<plateforme>-<architecture>
+```
+
+Le binaire produit peut ensuite être copié sur n'importe quelle machine du même type
+**sans Python**.
+
+> **Windows** : le script `build.sh` fonctionne sous Git Bash / WSL.
+> Le binaire `.exe` produit est autonome.
+
+---
+
+## Utilisation avec Python (optionnel)
+
+Si Python 3.7+ est déjà disponible sur vos machines, vous pouvez aussi utiliser
+directement le script source sans compilation :
+
+```bash
+python3 speedtest.py server
+python3 speedtest.py client --server 192.168.1.2
+python3 speedtest.py auto --config config.ini
 ```
 
 ---

@@ -1,0 +1,11 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# PyInstaller build artefacts
+build/
+*.spec
+
+# Distribution folder – binaries are kept in dist/ but build/ is excluded
+# dist/ is intentionally NOT ignored so the pre-built binary is in the repo
