@@ -38,6 +38,7 @@ Flux de mesure (download : terminal annexe → terminal 1) :
 
 import argparse
 import configparser
+import csv
 import json
 import os
 import socket
@@ -48,12 +49,17 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
+try:
+    from _version import VERSION
+except ImportError:
+    VERSION = "1.00"
+
 # ---------------------------------------------------------------------------
 # Constantes
 # ---------------------------------------------------------------------------
-VERSION = "1.0.0"
 DEFAULT_PORT = 5201
 BUFFER_SIZE = 65_536          # 64 Kio par lecture/écriture
+DEFAULT_TIMEOUT = 10.0
 
 # Tailles des fichiers de test
 SMALL_FILE_SIZE = 1 * 1_024                # 1 Kio
@@ -158,6 +164,7 @@ class TestResult:
     total_bytes: int
     elapsed_seconds: float
     ping_ms: float = 0.0
+    repeat_index: int = 1
 
     @property
     def throughput_mbps(self) -> float:
@@ -200,6 +207,7 @@ class TestResult:
             "throughput_mbps": round(self.throughput_mbps, 3),
             "throughput_mib_s": round(self.throughput_mib_s, 3),
             "ping_ms": round(self.ping_ms, 3),
+            "repeat_index": self.repeat_index,
         }
 
 
@@ -333,12 +341,16 @@ class Server:
 class Client:
     """Mode client : se connecte au serveur et exécute les tests."""
 
-    def __init__(self, server_ip: str, port: int = DEFAULT_PORT) -> None:
+    def __init__(
+        self, server_ip: str, port: int = DEFAULT_PORT, timeout: float = DEFAULT_TIMEOUT
+    ) -> None:
         self.server_ip = server_ip
         self.port = port
+        self.timeout = timeout
 
     def _connect(self) -> socket.socket:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(self.timeout)
         sock.connect((self.server_ip, self.port))
         return sock
 
@@ -362,7 +374,7 @@ class Client:
     # Envoi de fichiers (upload : client → serveur)
     # ------------------------------------------------------------------
 
-    def run_upload(self, test_type: str) -> Optional[TestResult]:
+    def run_upload(self, test_type: str, repeat_index: int = 1) -> Optional[TestResult]:
         """Envoie des fichiers de test au serveur et retourne les métriques."""
         try:
             with self._connect() as sock:
@@ -397,7 +409,7 @@ class Client:
 
                 elapsed = t_end - t_start
                 result = TestResult(
-                    "upload", test_type, file_count, total_bytes, elapsed, ping_ms
+                    "upload", test_type, file_count, total_bytes, elapsed, ping_ms, repeat_index
                 )
 
                 # Le serveur nous renvoie aussi ses métriques (ignoré ici,
@@ -415,7 +427,7 @@ class Client:
     # Réception de fichiers (download : serveur → client)
     # ------------------------------------------------------------------
 
-    def run_download(self, test_type: str) -> Optional[TestResult]:
+    def run_download(self, test_type: str, repeat_index: int = 1) -> Optional[TestResult]:
         """Reçoit des fichiers de test depuis le serveur et retourne les métriques."""
         try:
             with self._connect() as sock:
@@ -444,7 +456,7 @@ class Client:
 
                 elapsed = t_end - t_start
                 result = TestResult(
-                    "download", test_type, file_count, total_bytes, elapsed, ping_ms
+                    "download", test_type, file_count, total_bytes, elapsed, ping_ms, repeat_index
                 )
                 send_cmd(sock, CMD_BYE)
                 return result
@@ -493,6 +505,25 @@ def _print_summary(results: List[TestResult], target: str) -> None:
     if downloads:
         avg = sum(r.throughput_mbps for r in downloads) / len(downloads)
         print(f"  Débit moyen  download : {avg:.1f} Mbps")
+
+    if len({r.repeat_index for r in results}) > 1:
+        _separator("-")
+        print("  Agrégats par test (min / moy / max) :")
+        groups = {}
+        for r in results:
+            key = (r.direction, r.file_type)
+            groups.setdefault(key, []).append(r.throughput_mbps)
+
+        for (direction, file_type) in sorted(groups.keys()):
+            values = groups[(direction, file_type)]
+            min_v = min(values)
+            avg_v = sum(values) / len(values)
+            max_v = max(values)
+            print(
+                f"  {direction:8s} {file_type:6s} : "
+                f"{min_v:.1f} / {avg_v:.1f} / {max_v:.1f} Mbps"
+            )
+
     _separator("═")
     print()
 
@@ -502,24 +533,70 @@ def _print_summary(results: List[TestResult], target: str) -> None:
 # ---------------------------------------------------------------------------
 
 def run_tests(
-    client: Client, tests: List[str], direction: str
+    client: Client, tests: List[str], direction: str, repeat_count: int
 ) -> List[TestResult]:
     """Lance les tests demandés et affiche chaque résultat au fur et à mesure."""
     results: List[TestResult] = []
-    for test_type in tests:
-        if direction in ("upload", "both"):
-            print(f"  → Envoi    ({test_type})…")
-            r = client.run_upload(test_type)
-            if r:
-                results.append(r)
-                print(str(r))
-        if direction in ("download", "both"):
-            print(f"  ← Réception ({test_type})…")
-            r = client.run_download(test_type)
-            if r:
-                results.append(r)
-                print(str(r))
+    for repeat_index in range(1, repeat_count + 1):
+        if repeat_count > 1:
+            print(f"\n  --- Passage {repeat_index}/{repeat_count} ---")
+        for test_type in tests:
+            if direction in ("upload", "both"):
+                print(f"  → Envoi    ({test_type})…")
+                r = client.run_upload(test_type, repeat_index=repeat_index)
+                if r:
+                    results.append(r)
+                    print(str(r))
+            if direction in ("download", "both"):
+                print(f"  ← Réception ({test_type})…")
+                r = client.run_download(test_type, repeat_index=repeat_index)
+                if r:
+                    results.append(r)
+                    print(str(r))
     return results
+
+
+def _results_with_target(results: List[TestResult], target: str) -> List[dict]:
+    rows = []
+    for r in results:
+        row = r.to_dict()
+        row["target"] = target
+        rows.append(row)
+    return rows
+
+
+def _write_results(path: str, rows: List[dict], metadata: dict) -> None:
+    if not rows:
+        print("[INFO] Aucun résultat à exporter.")
+        return
+
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".json":
+        payload = {
+            "metadata": metadata,
+            "results": rows,
+        }
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+    elif ext == ".csv":
+        fieldnames = [
+            "target",
+            "direction",
+            "file_type",
+            "repeat_index",
+            "file_count",
+            "total_bytes",
+            "elapsed_seconds",
+            "throughput_mbps",
+            "throughput_mib_s",
+            "ping_ms",
+        ]
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+    else:
+        raise ValueError("Format de sortie non supporté. Utilisez .json ou .csv")
 
 
 # ---------------------------------------------------------------------------
@@ -543,6 +620,20 @@ def _parse_test_types(value: str) -> List[str]:
         if t in ALL_TESTS:
             result.append(t)
     return result or list(ALL_TESTS)
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("Doit être un entier strictement positif.")
+    return parsed
+
+
+def _positive_float(value: str) -> float:
+    parsed = float(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("Doit être un nombre strictement positif.")
+    return parsed
 
 
 # ---------------------------------------------------------------------------
@@ -586,6 +677,12 @@ Direction (--direction) :
         help="Mode d'exécution : server | client | auto",
     )
     parser.add_argument(
+        "--version",
+        action="version",
+        version=f"speed-intranet v{VERSION}",
+        help="Afficher la version puis quitter",
+    )
+    parser.add_argument(
         "--server",
         metavar="IP",
         help="Adresse IP du serveur cible (obligatoire en mode client)",
@@ -613,6 +710,23 @@ Direction (--direction) :
         default="both",
         help="Direction des tests (défaut : both)",
     )
+    parser.add_argument(
+        "--repeat",
+        type=_positive_int,
+        default=1,
+        help="Nombre de passages complets de la batterie de tests (défaut : 1)",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=_positive_float,
+        default=DEFAULT_TIMEOUT,
+        help=f"Timeout socket en secondes (défaut : {DEFAULT_TIMEOUT})",
+    )
+    parser.add_argument(
+        "--output",
+        metavar="FILE",
+        help="Exporter les résultats vers un fichier .json ou .csv",
+    )
     return parser
 
 
@@ -635,11 +749,13 @@ def main() -> None:
             parser.error("--server <IP> est requis en mode client.")
 
         tests = _parse_test_types(args.tests)
-        client = Client(args.server, args.port)
+        client = Client(args.server, args.port, timeout=args.timeout)
 
         print(f"\n  Serveur cible : {args.server}:{args.port}")
         print(f"  Tests         : {', '.join(tests)}")
         print(f"  Direction     : {args.direction}")
+        print(f"  Répétitions   : {args.repeat}")
+        print(f"  Timeout       : {args.timeout:.1f} s")
 
         # Mesure de la latence initiale
         ping = client.measure_ping()
@@ -649,8 +765,23 @@ def main() -> None:
             print("  Latence TCP   : indisponible\n")
         _separator()
 
-        results = run_tests(client, tests, args.direction)
+        results = run_tests(client, tests, args.direction, args.repeat)
         _print_summary(results, args.server)
+
+        if args.output:
+            rows = _results_with_target(results, args.server)
+            metadata = {
+                "version": VERSION,
+                "mode": "client",
+                "server": args.server,
+                "port": args.port,
+                "tests": tests,
+                "direction": args.direction,
+                "repeat": args.repeat,
+                "timeout_seconds": args.timeout,
+            }
+            _write_results(args.output, rows, metadata)
+            print(f"[INFO] Résultats exportés dans : {args.output}")
 
     # ------------------------------------------------------------------ auto
     elif args.mode == "auto":
@@ -669,17 +800,30 @@ def main() -> None:
         tests_cfg = cfg.get("tests", "test_types", fallback="all")
         tests = _parse_test_types(tests_cfg)
         direction = cfg.get("tests", "direction", fallback="both")
+        repeat_count = cfg.getint("tests", "repeat", fallback=args.repeat)
+        timeout = cfg.getfloat("network", "timeout", fallback=args.timeout)
+
+        if direction not in ("upload", "download", "both"):
+            sys.exit("[ERREUR] La direction doit être upload, download ou both.")
+        if repeat_count <= 0:
+            sys.exit("[ERREUR] repeat doit être strictement positif.")
+        if timeout <= 0:
+            sys.exit("[ERREUR] timeout doit être strictement positif.")
 
         print(f"\n  Configuration : {args.config}")
         print(f"  Terminaux     : {', '.join(terminals)}")
         print(f"  Port          : {port}")
         print(f"  Tests         : {', '.join(tests)}")
-        print(f"  Direction     : {direction}\n")
+        print(f"  Direction     : {direction}")
+        print(f"  Répétitions   : {repeat_count}")
+        print(f"  Timeout       : {timeout:.1f} s\n")
+
+        all_rows: List[dict] = []
 
         for terminal_ip in terminals:
             _separator()
             print(f"\n  === Test avec le terminal {terminal_ip} ===\n")
-            client = Client(terminal_ip, port)
+            client = Client(terminal_ip, port, timeout=timeout)
 
             ping = client.measure_ping()
             if ping >= 0:
@@ -688,8 +832,23 @@ def main() -> None:
                 print(f"  [AVERTISSEMENT] Impossible de joindre {terminal_ip}:{port}\n")
                 continue
 
-            results = run_tests(client, tests, direction)
+            results = run_tests(client, tests, direction, repeat_count)
             _print_summary(results, terminal_ip)
+            all_rows.extend(_results_with_target(results, terminal_ip))
+
+        if args.output:
+            metadata = {
+                "version": VERSION,
+                "mode": "auto",
+                "port": port,
+                "terminals": terminals,
+                "tests": tests,
+                "direction": direction,
+                "repeat": repeat_count,
+                "timeout_seconds": timeout,
+            }
+            _write_results(args.output, all_rows, metadata)
+            print(f"[INFO] Résultats exportés dans : {args.output}")
 
 
 if __name__ == "__main__":

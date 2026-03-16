@@ -44,6 +44,7 @@ Terminal 1 (contrôleur)                Terminal annexe 2          Terminal anne
 | Système | Fichier |
 |---|---|
 | **Linux 64-bit** (x86_64) | `dist/speedtest-linux-x86_64` |
+| **Windows 64-bit** (x86_64) | `dist/speedtest-windows-x86_64.exe` *(compilé sur Windows)* |
 
 ```bash
 # Cloner le dépôt (ou télécharger uniquement le binaire)
@@ -55,6 +56,7 @@ chmod +x dist/speedtest-linux-x86_64
 
 # Vérification
 ./dist/speedtest-linux-x86_64 --help
+./dist/speedtest-linux-x86_64 --version
 ```
 
 > **Note :** Le binaire `dist/speedtest-linux-x86_64` a été compilé pour Linux x86_64
@@ -90,6 +92,12 @@ Remplacez `python speedtest.py` par `./dist/speedtest-linux-x86_64` dans tous le
 
 # Petits et moyens fichiers, réception seulement
 ./dist/speedtest-linux-x86_64 client --server 192.168.1.2 --tests small,medium --direction download
+
+# 3 passages complets et export JSON
+./dist/speedtest-linux-x86_64 client --server 192.168.1.2 --repeat 3 --output resultats.json
+
+# Timeout socket à 5 secondes
+./dist/speedtest-linux-x86_64 client --server 192.168.1.2 --timeout 5
 ```
 
 ### 3. Mode automatique (sur Terminal 1, test tous les terminaux)
@@ -100,6 +108,9 @@ Remplacez `python speedtest.py` par `./dist/speedtest-linux-x86_64` dans tous le
 ./dist/speedtest-linux-x86_64 auto
 # ou avec un fichier de config personnalisé
 ./dist/speedtest-linux-x86_64 auto --config config.ini
+
+# Export CSV
+./dist/speedtest-linux-x86_64 auto --config config.ini --output resultats.csv
 ```
 
 ---
@@ -111,6 +122,9 @@ Remplacez `python speedtest.py` par `./dist/speedtest-linux-x86_64` dans tous le
 # Port TCP utilisé (même valeur sur toutes les machines)
 port = 5201
 
+# Timeout socket en secondes
+timeout = 10
+
 # IP des terminaux annexes (chacun tourne en mode "server")
 terminals = 192.168.1.2, 192.168.1.3
 
@@ -120,6 +134,9 @@ test_types = all
 
 # upload | download | both
 direction = both
+
+# nombre de passages complets
+repeat = 1
 ```
 
 ---
@@ -127,8 +144,9 @@ direction = both
 ## Options de la ligne de commande
 
 ```
-usage: speedtest.py [-h] [--server IP] [--port PORT] [--config FILE]
+usage: speedtest.py [-h] [--version] [--server IP] [--port PORT] [--config FILE]
                     [--tests TYPES] [--direction {upload,download,both}]
+                    [--repeat N] [--timeout SECONDS] [--output FILE]
                     {server,client,auto}
 
 --tests :
@@ -142,6 +160,18 @@ usage: speedtest.py [-h] [--server IP] [--port PORT] [--config FILE]
   upload          Terminal 1 → terminal annexe seulement
   download        Terminal annexe → Terminal 1 seulement
   both            Les deux sens (défaut)
+
+--repeat :
+  N               Nombre de passages complets (défaut : 1)
+
+--timeout :
+  SECONDS         Timeout socket (défaut : 10)
+
+--output :
+  FILE            Export des résultats (.json ou .csv)
+
+--version :
+  Affiche la version puis quitte
 ```
 
 ---
@@ -166,6 +196,9 @@ usage: speedtest.py [-h] [--server IP] [--port PORT] [--config FILE]
 Le **premier ping** marque le début du test (réseau opérationnel, latence mesurée).  
 Le **second ping** marque la fin du test (tous les fichiers ont bien été transmis).  
 Le delta donne le temps de transfert effectif, duquel on déduit le débit réel.
+
+Quand plusieurs passages sont demandés (`--repeat` ou `repeat` dans `config.ini`),
+le résumé inclut des agrégats **min / moyenne / max** par direction et type de test.
 
 ---
 
@@ -215,6 +248,10 @@ chmod +x build.sh
 ./build.sh
 # → produit dist/speedtest-<plateforme>-<architecture>
 ```
+
+Le script de build met aussi à jour automatiquement la version dans `_version.py` :
+- la version est incrémentée de **0.01** quand `speedtest.py` a changé depuis le dernier build,
+- sinon la version reste inchangée.
 
 Le binaire produit peut ensuite être copié sur n'importe quelle machine du même type
 **sans Python**.
