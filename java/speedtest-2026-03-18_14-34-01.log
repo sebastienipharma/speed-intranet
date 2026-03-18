@@ -1,0 +1,14 @@
+=== Dￃﾩmarrage du test : 2026-03-18 14:34:01 ===
+Paramￃﾨtres : [client, --port, 5201, --timeout, 10, --server, 192.168.255.136, --tests, small, --direction, upload, --repeat, 1]
+--------------------------------------------
+Target: 192.168.255.136:5201
+Tests: small
+Direction: upload
+Repeat: 1
+Timeout: 10 s
+TCP latency: unavailable
+-> Upload   (small)
+[CLIENT] upload error (small): Connection timed out: connect
+No results.
+--------------------------------------------
+=== Fin du test : 2026-03-18 14:34:43 ===

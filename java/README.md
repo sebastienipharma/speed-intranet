@@ -1,4 +1,4 @@
-# speed-intranet Java 8
+﻿# speed-intranet Java 8
 
 Reimplementation of the network bandwidth measurement tool in Java 8.
 
@@ -16,26 +16,26 @@ mvn clean package
 
 Output JAR:
 
-- `target/speed-intranet-java8-1.0.0.jar`
+- `target/speed-intranet-java8-1.0.4.jar`
 
 ## Run
 
 Server:
 
 ```bash
-java -jar target/speed-intranet-java8-1.0.0.jar server --port 5201
+java -jar target/speed-intranet-java8-1.0.1.jar server --port 5201
 ```
 
 Client:
 
 ```bash
-java -jar target/speed-intranet-java8-1.0.0.jar client --server 192.168.1.2 --tests all --direction both --repeat 3 --timeout 10 --output results.json
+java -jar target/speed-intranet-java8-1.0.1.jar client --server 192.168.1.2 --tests all --direction both --repeat 3 --timeout 10 --output results.json
 ```
 
 Auto mode with root config:
 
 ```bash
-java -jar target/speed-intranet-java8-1.0.0.jar auto --config ../config.ini --output results.csv
+java -jar target/speed-intranet-java8-1.0.1.jar auto --config ../config.ini --output results.csv
 ```
 
 ## CLI options
@@ -49,3 +49,6 @@ java -jar target/speed-intranet-java8-1.0.0.jar auto --config ../config.ini --ou
 - `--repeat <int>`
 - `--timeout <seconds>`
 - `--output <file.json|file.csv>`
+
+
+

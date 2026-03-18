@@ -1,0 +1,58 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+cd "$ROOT_DIR"
+
+STAGED_FILES="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if [ -z "$STAGED_FILES" ]; then
+  echo "pre-commit: no staged changes, version bump skipped."
+  exit 0
+fi
+
+has_code_change=0
+for file in $STAGED_FILES; do
+  case "$file" in
+    *.py|*.ps1|*.java|*.sh|*.bat|*.xml|*.ini)
+      has_code_change=1
+      break
+      ;;
+  esac
+done
+
+if [ "$has_code_change" -ne 1 ]; then
+  echo "pre-commit: doc/non-code changes only, version bump skipped."
+  exit 0
+fi
+
+run_bump() {
+  if command -v python3 >/dev/null 2>&1; then
+    python3 scripts/bump_version.py
+    return
+  fi
+
+  if command -v python >/dev/null 2>&1; then
+    python scripts/bump_version.py
+    return
+  fi
+
+  if command -v py >/dev/null 2>&1; then
+    py -3 scripts/bump_version.py
+    return
+  fi
+
+  if command -v powershell >/dev/null 2>&1; then
+    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump_version.ps1 -RepoRoot "$ROOT_DIR"
+    return
+  fi
+
+  echo "Python or PowerShell is required to run version bump hook." >&2
+  exit 1
+}
+
+run_bump
+
+git add _version.py speedtest.py speedtest-win.ps1 build.sh README.md java/pom.xml java/README.md java/src/main/java/com/speedintranet/SpeedIntranet.java java/src/main/java/com/speedintranet/SpeedIntranetGui.java
+
+echo "pre-commit: version increment applied and staged."

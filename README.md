@@ -1,4 +1,4 @@
-# speed-intranet
+﻿# speed-intranet
 
 Outil de mesure de la **bande passante effective** d'un réseau local.  
 *Local Network Bandwidth Measurement Tool*
@@ -206,7 +206,7 @@ le résumé inclut des agrégats **min / moyenne / max** par direction et type d
 
 ```
 ════════════════════════════════════════════════════════════════════════
-  speed-intranet v1.0.0 — Mesure de bande passante réseau local
+  speed-intranet v1.0.4 — Mesure de bande passante réseau local
 ════════════════════════════════════════════════════════════════════════
 
   Serveur cible : 192.168.1.2:5201
@@ -301,3 +301,6 @@ Options disponibles : `--tests`, `--direction`, `--repeat`, `--timeout`, `--outp
 ## Licence
 
 MIT — voir [LICENSE](LICENSE)
+
+
+

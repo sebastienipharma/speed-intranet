@@ -1,0 +1,23 @@
+=== Dￃﾩmarrage du test : 2026-03-18 14:40:07 ===
+Paramￃﾨtres : [client, --port, 5201, --timeout, 10, --server, 192.168.255.136, --tests, small, --direction, both, --repeat, 1]
+--------------------------------------------
+Target: 192.168.255.136:5201
+Tests: small
+Direction: both
+Repeat: 1
+Timeout: 10 s
+TCP latency: 248,9 ms
+-> Upload   (small)
+-> [UPLOAD  ] small  : 200 file(s), 200,0 KiB in 0.062 s -> 3.14 MiB/s (26.3 Mbps) [latency: 245.9 ms]
+<- Download (small)
+<- [DOWNLOAD] small  : 200 file(s), 200,0 KiB in 0.264 s -> 0.74 MiB/s (6.2 Mbps) [latency: 202.0 ms]
+------------------------------------------------------------------------
+SUMMARY - 192.168.255.136
+------------------------------------------------------------------------
+-> [UPLOAD  ] small  : 200 file(s), 200,0 KiB in 0.062 s -> 3.14 MiB/s (26.3 Mbps) [latency: 245.9 ms]
+<- [DOWNLOAD] small  : 200 file(s), 200,0 KiB in 0.264 s -> 0.74 MiB/s (6.2 Mbps) [latency: 202.0 ms]
+Average upload:   26,3 Mbps
+Average download: 6,2 Mbps
+------------------------------------------------------------------------
+--------------------------------------------
+=== Fin du test : 2026-03-18 14:40:08 ===

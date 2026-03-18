@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+﻿#!/usr/bin/env sh
 # build.sh — Construit l'exécutable autonome speed-intranet
 #
 # Prérequis : Python 3.7+ et pip doivent être installés sur la machine de build.
@@ -47,14 +47,14 @@ program_file, state_file, version_module_file = sys.argv[1], sys.argv[2], sys.ar
 with open(program_file, "rb") as f:
   current_hash = hashlib.sha256(f.read()).hexdigest()
 
-state = {"version": "1.00", "program_hash": ""}
+state = {"version": "1.04", "program_hash": ""}
 if os.path.exists(state_file):
   with open(state_file, "r", encoding="utf-8") as f:
     loaded = json.load(f)
     if isinstance(loaded, dict):
       state.update(loaded)
 
-version = float(state.get("version", "1.00"))
+version = float(state.get("version", "1.01"))
 previous_hash = state.get("program_hash", "")
 
 if previous_hash and previous_hash != current_hash:
@@ -100,3 +100,6 @@ echo ""
 echo "=== Terminé ==="
 echo "Exécutable : dist/$BINARY_NAME"
 ls -lh "dist/$BINARY_NAME"
+
+
+

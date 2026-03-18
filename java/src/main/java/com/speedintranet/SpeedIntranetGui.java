@@ -1,12 +1,18 @@
-package com.speedintranet;
+﻿package com.speedintranet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public final class SpeedIntranetGui {
 
@@ -25,6 +31,10 @@ public final class SpeedIntranetGui {
     private JButton stopButton;
     private volatile Thread runThread;
 
+    private PrintWriter logWriter;
+    private File logFile;
+    private JLabel logFileLabel;
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -39,7 +49,7 @@ public final class SpeedIntranetGui {
     }
 
     private void createAndShow() {
-        frame = new JFrame("speed-intranet v1.00");
+        frame = new JFrame("speed-intranet v1.04");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(780, 620);
         frame.setLocationRelativeTo(null);
@@ -54,6 +64,7 @@ public final class SpeedIntranetGui {
         frame.setContentPane(main);
         frame.setVisible(true);
 
+        initLogFile();
         redirectSystemOut();
         updateFieldVisibility();
     }
@@ -158,6 +169,12 @@ public final class SpeedIntranetGui {
         logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
         JScrollPane scroll = new JScrollPane(logArea);
         panel.add(scroll, BorderLayout.CENTER);
+
+        logFileLabel = new JLabel(" ");
+        logFileLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
+        logFileLabel.setForeground(Color.DARK_GRAY);
+        panel.add(logFileLabel, BorderLayout.SOUTH);
+
         return panel;
     }
 
@@ -195,6 +212,16 @@ public final class SpeedIntranetGui {
         });
         panel.add(clearButton);
 
+        JButton openLogButton = new JButton("Ouvrir log");
+        openLogButton.setPreferredSize(new Dimension(110, 32));
+        openLogButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openLogFile();
+            }
+        });
+        panel.add(openLogButton);
+
         return panel;
     }
 
@@ -219,6 +246,15 @@ public final class SpeedIntranetGui {
 
         final String[] args = buildArgs();
 
+        // Nouveau fichier de log pour ce test
+        initLogFile();
+
+        // Logguer les paramètres utilisés
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        System.out.println("=== Démarrage du test : " + timestamp + " ===");
+        System.out.println("Paramètres : " + java.util.Arrays.toString(args));
+        System.out.println("--------------------------------------------");
+
         runThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -226,7 +262,13 @@ public final class SpeedIntranetGui {
                     SpeedIntranet.main(args);
                 } catch (Exception ex) {
                     System.out.println("[ERROR] " + ex.getMessage());
+                    ex.printStackTrace(System.err);
                 } finally {
+                    System.out.println("--------------------------------------------");
+                    System.out.println("=== Fin du test : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " ===");
+                    if (logWriter != null) {
+                        logWriter.flush();
+                    }
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -293,6 +335,41 @@ public final class SpeedIntranetGui {
         return args.toArray(new String[0]);
     }
 
+    private void initLogFile() {
+        try {
+            if (logWriter != null) {
+                logWriter.close();
+            }
+            String ts = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+            logFile = new File("speedtest-" + ts + ".log");
+            logWriter = new PrintWriter(new FileOutputStream(logFile, true), true);
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    logFileLabel.setText("Log : " + logFile.getAbsolutePath());
+                }
+            });
+        } catch (IOException e) {
+            logWriter = null;
+        }
+    }
+
+    private void openLogFile() {
+        if (logFile != null && logFile.exists()) {
+            try {
+                Desktop.getDesktop().open(logFile);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(frame,
+                    "Impossible d'ouvrir : " + logFile.getAbsolutePath(),
+                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(frame,
+                "Aucun fichier de log disponible.",
+                "Information", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
     private void redirectSystemOut() {
         PrintStream guiOut = new PrintStream(new OutputStream() {
             private final StringBuilder buffer = new StringBuilder();
@@ -304,6 +381,12 @@ public final class SpeedIntranetGui {
                 if (c == '\n') {
                     final String line = buffer.toString();
                     buffer.setLength(0);
+                    // Écriture dans le fichier de log
+                    if (logWriter != null) {
+                        logWriter.print(line);
+                        logWriter.flush();
+                    }
+                    // Affichage dans la GUI
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -318,3 +401,6 @@ public final class SpeedIntranetGui {
         System.setErr(guiOut);
     }
 }
+
+
+

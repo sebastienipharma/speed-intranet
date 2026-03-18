@@ -1,0 +1,18 @@
+=== Dￃﾩmarrage du test : 2026-03-18 14:45:43 ===
+Paramￃﾨtres : [server, --port, 5201, --timeout, 10]
+--------------------------------------------
+[SERVER] Listening on 0.0.0.0:5201 (Ctrl+C to stop)
+[SERVER] Incoming connection from 192.168.255.136:57971
+[SERVER] Disconnected 192.168.255.136:57971
+[SERVER] Incoming connection from 192.168.255.136:57973
+[SERVER] Disconnected 192.168.255.136:57973
+[SERVER] Incoming connection from 192.168.255.136:57974
+[SERVER] Disconnected 192.168.255.136:57974
+[SERVER] Incoming connection from 192.168.255.136:57976
+[SERVER] Disconnected 192.168.255.136:57976
+[SERVER] Incoming connection from 192.168.255.136:57977
+[SERVER] Disconnected 192.168.255.136:57977
+[SERVER] Incoming connection from 192.168.255.136:57979
+[SERVER] Disconnected 192.168.255.136:57979
+[SERVER] Incoming connection from 192.168.255.136:57983
+[SERVER] Disconnected 192.168.255.136:57983

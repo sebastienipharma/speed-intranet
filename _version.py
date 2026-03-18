@@ -1,2 +1,5 @@
-# Fichier généré automatiquement par build.sh
-VERSION = "1.00"
+﻿# Fichier généré automatiquement par build.sh
+VERSION = "1.04"
+
+
+
