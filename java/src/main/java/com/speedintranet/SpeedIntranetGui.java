@@ -11,7 +11,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.text.SimpleDateFormat;
+import java.util.Enumeration;
 import java.util.Date;
 
 public final class SpeedIntranetGui {
@@ -30,6 +35,7 @@ public final class SpeedIntranetGui {
     private JButton runButton;
     private JButton stopButton;
     private volatile Thread runThread;
+    private JLabel localIpv4Label;
 
     private PrintWriter logWriter;
     private File logFile;
@@ -49,7 +55,7 @@ public final class SpeedIntranetGui {
     }
 
     private void createAndShow() {
-        frame = new JFrame("speed-intranet v1.06");
+        frame = new JFrame("speed-intranet v1.07");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(780, 620);
         frame.setLocationRelativeTo(null);
@@ -100,6 +106,15 @@ public final class SpeedIntranetGui {
         serverField = new JTextField("192.168.1.2", 20);
         gbc.gridx = 1; gbc.weightx = 1;
         panel.add(serverField, gbc);
+
+        // Local IPv4
+        row++;
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0;
+        panel.add(new JLabel("IPv4 locale :"), gbc);
+        localIpv4Label = new JLabel(detectLocalIpv4());
+        localIpv4Label.setForeground(Color.DARK_GRAY);
+        gbc.gridx = 1; gbc.weightx = 1;
+        panel.add(localIpv4Label, gbc);
 
         // Port
         row++;
@@ -335,6 +350,28 @@ public final class SpeedIntranetGui {
         return args.toArray(new String[0]);
     }
 
+    private String detectLocalIpv4() {
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface ni = interfaces.nextElement();
+                if (!ni.isUp() || ni.isLoopback() || ni.isVirtual()) {
+                    continue;
+                }
+                Enumeration<InetAddress> addresses = ni.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress address = addresses.nextElement();
+                    if (address instanceof Inet4Address && !address.isLoopbackAddress()) {
+                        return address.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException ignored) {
+            // Keep fallback value below if local IPv4 cannot be resolved.
+        }
+        return "indisponible";
+    }
+
     private void initLogFile() {
         try {
             if (logWriter != null) {
@@ -401,6 +438,7 @@ public final class SpeedIntranetGui {
         System.setErr(guiOut);
     }
 }
+
 
 
 

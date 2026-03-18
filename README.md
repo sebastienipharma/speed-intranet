@@ -12,7 +12,7 @@ Outil de mesure de bande passante intranet, désormais maintenu en version Java.
 ```bash
 cd java
 mvn clean package
-java -jar target/speed-intranet-java8-1.0.6.jar
+java -jar target/speed-intranet-java8-1.0.7.jar
 ```
 
 Cela ouvre l'interface graphique cliquable.
@@ -36,6 +36,7 @@ La documentation détaillée Java est dans `java/README.md`.
 ## Licence
 
 MIT - voir [LICENSE](LICENSE)
+
 
 
 
