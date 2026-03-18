@@ -16,7 +16,7 @@
     [switch]$Help
 )
 
-$VersionValue = "1.04"
+$VersionValue = "1.05"
 $BufferSize = 65536
 $SmallFileSize = 1024
 $SmallFileCount = 200
@@ -434,6 +434,7 @@ switch ($Mode) {
         Write-Results -results $allResults -outputPath $Output -mode "auto" -tests $testsAuto -direction $dirVal -repeat $repVal -timeout $timeoutVal
     }
 }
+
 
 
 

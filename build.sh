@@ -47,7 +47,7 @@ program_file, state_file, version_module_file = sys.argv[1], sys.argv[2], sys.ar
 with open(program_file, "rb") as f:
   current_hash = hashlib.sha256(f.read()).hexdigest()
 
-state = {"version": "1.04", "program_hash": ""}
+state = {"version": "1.05", "program_hash": ""}
 if os.path.exists(state_file):
   with open(state_file, "r", encoding="utf-8") as f:
     loaded = json.load(f)
@@ -100,6 +100,7 @@ echo ""
 echo "=== Terminé ==="
 echo "Exécutable : dist/$BINARY_NAME"
 ls -lh "dist/$BINARY_NAME"
+
 
 
 

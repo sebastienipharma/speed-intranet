@@ -73,7 +73,7 @@ Replace-FirstMatch -Path $pomPath -Pattern '<version>(\d+)\.(\d+)\.(\d+)</versio
 
 $docTargets = @(
     @{ Path = "speedtest.py"; Pattern = 'speed-intranet\sv(\d+\.\d+\.\d+)'; Format = { param($v) "speed-intranet v$v" } },
-    @{ Path = "README.md"; Pattern = 'speed-intranet\sv(\d+\.\d+\.\d+)\s+—'; Format = { param($v) "speed-intranet v$v —" } },
+    @{ Path = "README.md"; Pattern = 'speed-intranet\sv(\d+\.\d+\.\d+)'; Format = { param($v) "speed-intranet v$v" } },
     @{ Path = "java/README.md"; Pattern = 'speed-intranet-java8-(\d+\.\d+\.\d+)\.jar'; Format = { param($v) "speed-intranet-java8-$v.jar" } }
 )
 

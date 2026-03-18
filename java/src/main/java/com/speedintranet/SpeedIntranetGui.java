@@ -49,7 +49,7 @@ public final class SpeedIntranetGui {
     }
 
     private void createAndShow() {
-        frame = new JFrame("speed-intranet v1.04");
+        frame = new JFrame("speed-intranet v1.05");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(780, 620);
         frame.setLocationRelativeTo(null);
@@ -401,6 +401,7 @@ public final class SpeedIntranetGui {
         System.setErr(guiOut);
     }
 }
+
 
 
 

@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python3
 """
-speed-intranet v1.0.4
+speed-intranet v1.0.5
 
 Outil de mesure de la bande passante effective d'un réseau local.
 Local Network Bandwidth Measurement Tool.
@@ -52,7 +52,7 @@ from typing import List, Optional, Tuple
 try:
     from _version import VERSION
 except ImportError:
-    VERSION = "1.04"
+    VERSION = "1.05"
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -853,6 +853,8 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
 
 
 

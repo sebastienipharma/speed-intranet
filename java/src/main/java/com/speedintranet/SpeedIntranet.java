@@ -24,7 +24,7 @@ import java.util.Map;
 
 public final class SpeedIntranet {
 
-    private static final String VERSION = "1.04";
+    private static final String VERSION = "1.05";
     private static final int DEFAULT_PORT = 5201;
     private static final int BUFFER_SIZE = 65_536;
     private static final int DEFAULT_TIMEOUT_SECONDS = 10;
@@ -1052,6 +1052,7 @@ public final class SpeedIntranet {
         System.out.println("  --version");
     }
 }
+
 
 
 
