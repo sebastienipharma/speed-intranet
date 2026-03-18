@@ -274,6 +274,30 @@ python3 speedtest.py auto --config config.ini
 
 ---
 
+## Utilisation Windows sans Python (BAT + PowerShell)
+
+Le dépôt inclut aussi une version native Windows sans dépendance Python :
+
+- `speedtest.bat` (lanceur)
+- `speedtest-win.ps1` (moteur réseau)
+
+Exemples :
+
+```powershell
+REM Sur les terminaux annexes
+speedtest.bat server --port 5201
+
+REM Sur le terminal 1, test d'une machine
+speedtest.bat client --server 192.168.255.136 --repeat 3 --output resultats.json
+
+REM Mode auto avec config.ini
+speedtest.bat auto --config config.ini --output resultats.csv
+```
+
+Options disponibles : `--tests`, `--direction`, `--repeat`, `--timeout`, `--output`, `--version`.
+
+---
+
 ## Licence
 
 MIT — voir [LICENSE](LICENSE)
