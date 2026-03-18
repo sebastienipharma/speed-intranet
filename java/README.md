@@ -16,7 +16,7 @@ mvn clean package
 
 Output JAR:
 
-- `target/speed-intranet-java8-1.0.5.jar`
+- `target/speed-intranet-java8-1.0.6.jar`
 
 ## Run
 
@@ -49,6 +49,7 @@ java -jar target/speed-intranet-java8-1.0.1.jar auto --config ../config.ini --ou
 - `--repeat <int>`
 - `--timeout <seconds>`
 - `--output <file.json|file.csv>`
+
 
 
 

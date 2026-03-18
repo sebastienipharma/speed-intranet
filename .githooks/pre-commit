@@ -14,7 +14,7 @@ fi
 has_code_change=0
 for file in $STAGED_FILES; do
   case "$file" in
-    *.py|*.ps1|*.java|*.sh|*.bat|*.xml|*.ini)
+    *.java|*.xml|*.ini|*.md)
       has_code_change=1
       break
       ;;
@@ -27,27 +27,6 @@ if [ "$has_code_change" -ne 1 ]; then
 fi
 
 run_bump() {
-  if command -v python3 >/dev/null 2>&1; then
-    if python3 --version >/dev/null 2>&1; then
-      python3 scripts/bump_version.py
-      return
-    fi
-  fi
-
-  if command -v python >/dev/null 2>&1; then
-    if python --version >/dev/null 2>&1; then
-      python scripts/bump_version.py
-      return
-    fi
-  fi
-
-  if command -v py >/dev/null 2>&1; then
-    if py -3 --version >/dev/null 2>&1; then
-      py -3 scripts/bump_version.py
-      return
-    fi
-  fi
-
   if command -v powershell >/dev/null 2>&1; then
     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump_version.ps1 -RepoRoot "$ROOT_DIR"
     return
@@ -58,12 +37,12 @@ run_bump() {
     return
   fi
 
-  echo "Python or PowerShell is required to run version bump hook." >&2
+  echo "PowerShell is required to run version bump hook." >&2
   exit 1
 }
 
 run_bump
 
-git add _version.py speedtest.py speedtest-win.ps1 build.sh README.md java/pom.xml java/README.md java/src/main/java/com/speedintranet/SpeedIntranet.java java/src/main/java/com/speedintranet/SpeedIntranetGui.java
+git add README.md java/pom.xml java/README.md java/src/main/java/com/speedintranet/SpeedIntranet.java java/src/main/java/com/speedintranet/SpeedIntranetGui.java
 
 echo "pre-commit: version increment applied and staged."

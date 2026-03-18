@@ -43,12 +43,8 @@ $decimalVersion = $null
 $semverVersion = $null
 
 $decimalTargets = @(
-    @{ Path = "_version.py"; Pattern = 'VERSION\s*=\s*"(\d+\.\d{2})"'; Format = { param($v) "VERSION = `"$v`"" } },
-    @{ Path = "speedtest.py"; Pattern = 'VERSION\s*=\s*"(\d+\.\d{2})"'; Format = { param($v) "VERSION = `"$v`"" } },
-    @{ Path = "speedtest-win.ps1"; Pattern = '\$VersionValue\s*=\s*"(\d+\.\d{2})"'; Format = { param($v) "`$VersionValue = `"$v`"" } },
     @{ Path = "java/src/main/java/com/speedintranet/SpeedIntranet.java"; Pattern = 'private\s+static\s+final\s+String\s+VERSION\s*=\s*"(\d+\.\d{2})";'; Format = { param($v) "private static final String VERSION = `"$v`";" } },
-    @{ Path = "java/src/main/java/com/speedintranet/SpeedIntranetGui.java"; Pattern = 'frame\s*=\s*new\s+JFrame\("speed-intranet\sv(\d+\.\d{2})"\);'; Format = { param($v) "frame = new JFrame(`"speed-intranet v$v`");" } },
-    @{ Path = "build.sh"; Pattern = 'state\s*=\s*\{"version":\s*"(\d+\.\d{2})",\s*"program_hash":\s*""\}'; Format = { param($v) "state = {`"version`": `"$v`", `"program_hash`": `"`"}" } }
+    @{ Path = "java/src/main/java/com/speedintranet/SpeedIntranetGui.java"; Pattern = 'frame\s*=\s*new\s+JFrame\("speed-intranet\sv(\d+\.\d{2})"\);'; Format = { param($v) "frame = new JFrame(`"speed-intranet v$v`");" } }
 )
 
 foreach ($target in $decimalTargets) {
@@ -72,8 +68,7 @@ Replace-FirstMatch -Path $pomPath -Pattern '<version>(\d+)\.(\d+)\.(\d+)</versio
 }
 
 $docTargets = @(
-    @{ Path = "speedtest.py"; Pattern = 'speed-intranet\sv(\d+\.\d+\.\d+)'; Format = { param($v) "speed-intranet v$v" } },
-    @{ Path = "README.md"; Pattern = 'speed-intranet\sv(\d+\.\d+\.\d+)'; Format = { param($v) "speed-intranet v$v" } },
+    @{ Path = "README.md"; Pattern = 'speed-intranet-java8-(\d+\.\d+\.\d+)\.jar'; Format = { param($v) "speed-intranet-java8-$v.jar" } },
     @{ Path = "java/README.md"; Pattern = 'speed-intranet-java8-(\d+\.\d+\.\d+)\.jar'; Format = { param($v) "speed-intranet-java8-$v.jar" } }
 )
 

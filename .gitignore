@@ -1,11 +1,5 @@
-# Python cache
-__pycache__/
-*.py[cod]
-*.pyo
+# Java build artefacts
+java/target/
 
-# PyInstaller build artefacts
-build/
-*.spec
-
-# Distribution folder – binaries are kept in dist/ but build/ is excluded
-# dist/ is intentionally NOT ignored so the pre-built binary is in the repo
+# Runtime logs
+java/*.log
